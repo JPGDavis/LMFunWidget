@@ -1,0 +1,321 @@
+<html>    
+<head>
+	<style>
+		html, body 
+		{
+			width: 100%;
+			height: 100%;
+			margin: 0px;
+			border: 0;
+			overflow: hidden; /*  Disable scrollbars */
+			display: block;  /* No floating content on sides */
+		}
+	</style>
+</head>
+<body style="background-color:white;">
+	<canvas id='c' style = 'position: absolute; left: 0px; top: 0px;' >
+	</canvas>
+	<script>
+		var htmlCanvas = document.getElementById('c');
+		var context = htmlCanvas.getContext('2d');
+
+		var bubbles = [];
+		var fishies = [];
+		
+		var color = "#56B6D9";
+		var targetHeight = 50;
+		var tension = 0.025;
+		var dampening = 0.99;
+		var spread = 0.25;
+		var gravity = 0.1;
+		var rate = "30";
+
+		var emitBubbles = "true";
+
+		initialize();
+
+		function getQueryVariable(variable)
+		{
+			var query = window.location.search.substring(1);
+			var vars = query.split("&");
+
+			for (var i=0;i<vars.length;i++)
+			{
+				var pair = vars[i].split("=");
+				if(pair[0] == variable)
+				{
+					return pair[1];
+				}
+			}
+
+			return(false);
+		}
+
+		function bubble(x,y,velx,vely,size)
+		{
+			this.alive = true;
+			this.y = y;
+			this.x = x;
+			this.velX = velx;
+			this.velY = vely;
+
+			this.size = size;
+
+			this.Update = function()
+			{
+				if(this.alive)
+				{
+					this.velY -= gravity;
+
+					this.x += this.velX;
+					this.y += this.velY;
+
+					if(this.y < 0)
+					{
+						this.alive = false;
+					}
+				}
+			}
+		}
+
+		function fish(x,y,velx,vely,size)
+		{
+			this.alive = true;
+			this.y = y;
+			this.x = x;
+			this.velX = velx;
+			this.velY = vely;
+
+			this.size = size;
+
+			this.targetX = 0;
+			this.targetY = 0;
+
+			this.Update = function()
+			{
+				if(this.alive)
+				{
+					if(this.velX > 5)
+					{
+						this.velX *= dampening;
+					}
+
+					if(this.velY > 5)
+					{
+						this.velY *= dampening;
+					}
+
+					var potentialX = this.x + this.velX;
+					var potentialY = this.x + this.velY;
+
+					//if(potentialX > 0 && potentialY > 0 && potentialX < htmlCanvas.width && potentialY < htmlCanvas.height)
+					//{
+						this.x += this.velX;
+						this.y += this.velY;
+					//} 
+					//else
+					//{
+						//this.velX = -this.velX;
+						//this.velY = -this.velY;
+					//}
+				}
+			}
+		}
+
+		function updateBubbles()
+		{
+			for (var i = 0; i < bubbles.length; i++)
+			{
+				bubbles[i].Update();
+			}
+		}
+
+		function updateFish()
+		{
+			for (var i = 0; i < fishies.length; i++)
+			{
+				fishies[i].Update();
+			}
+		}
+
+		function initialize()
+		{
+			window.addEventListener('resize', resizeCanvas, false);
+
+			var col = getQueryVariable("color");
+
+			if(col)
+			{
+				color = "#" + col;
+			}
+
+			var rat = getQueryVariable("rate");
+
+			if(rat)
+			{
+				rate = rat;
+			}
+
+			var emit = getQueryVariable("emit");
+
+			if(emit)
+			{
+				emitBubbles = emit;
+			}
+			
+			resizeCanvas();
+		}
+		
+		function redraw()
+		{
+			context.clearRect(0, 0, htmlCanvas.width, htmlCanvas.height);
+
+			context.fillStyle = "white";
+			htmlCanvas.style.background = color;
+
+			for(var i = 0; i < bubbles.length; i++)
+			{
+				if(bubbles[i].alive)
+				{
+					context.beginPath();
+					context.arc(bubbles[i].x, bubbles[i].y, bubbles[i].size, 0, 2 * Math.PI, false);
+					context.fill();
+				}
+			}
+
+			for(var i = 0; i < fishies.length; i++)
+			{
+				var fsh = fishies[i];
+
+				if(fsh.alive)
+				{
+					var height = fsh.size / 1.5;
+					var width = fsh.size;
+
+					context.beginPath();
+
+					context.moveTo(fsh.x, fsh.y - height);
+  
+					context.bezierCurveTo(
+						fsh.x + width, fsh.y - height,
+						fsh.x + width, fsh.y + height,
+						fsh.x, fsh.y + height);
+
+					context.bezierCurveTo(
+						fsh.x - width, fsh.y + height,
+						fsh.x - width, fsh.y - height,
+						fsh.x, fsh.y - height);
+
+					context.fill();
+  					context.closePath();
+
+					context.beginPath();
+					context.moveTo(fsh.x, fsh.y);
+
+					if(fsh.velX > 0)
+					{
+						context.lineTo(fsh.x - fsh.size, fsh.y + height);
+						context.lineTo(fsh.x - fsh.size, fsh.y - height);
+					} 
+					else
+					{
+						context.lineTo(fsh.x + fsh.size, fsh.y + height);
+						context.lineTo(fsh.x + fsh.size, fsh.y - height);
+					}
+
+					context.closePath();
+					context.fill();
+				}
+			}
+
+			context.closePath();
+			context.fill();
+		}
+
+		function resizeCanvas()
+		{
+			htmlCanvas.width = window.innerWidth;
+			htmlCanvas.height = window.innerHeight;
+
+			bubbles = [];
+			fishies = [];
+
+			var fishCount = (Math.random() * 2) + 2;
+
+			for(var i = 0; i < fishCount; i++)
+			{
+				var randomX = Math.random() * htmlCanvas.width;
+				var randomY = Math.random() * htmlCanvas.height;
+				addFish(randomX,randomY,0,0,(Math.random() * 8) + 10);
+			}
+
+			redraw();
+		}
+
+		function updateScene()
+		{
+			updateBubbles();
+			updateFish();
+			redraw();
+		}
+
+		function addBubble(x,y,velX,velY,size)
+		{
+			var reuse = false;
+
+			var newBubble = new bubble(x, y, velX, velY, size);
+
+			for (var i = 0; i < bubbles.length; i++)
+			{
+				if(!bubbles[i].alive)
+				{
+					bubbles[i] = newBubble;
+
+					reuse = true;
+					i = bubbles.length;
+				}
+			}
+
+			if(!reuse)
+			{
+				bubbles[bubbles.length] = newBubble;
+			}
+		}
+
+		function addFish(x,y,velX,velY,size)
+		{
+			var newFish = new fish(x,y,velX,velY,size);
+
+			fishies[fishies.length] = newFish;
+		}
+
+		function air()
+		{
+			addBubble(htmlCanvas.width - 50, htmlCanvas.height, (Math.random() - 0.5) * 0.5, Math.random() - 0.5,Math.random() * 3 + 3);
+		}
+
+		function fishTarget()
+		{
+			var fishIndex = Math.floor(Math.random() * fishies.length);
+			
+			var fsh = fishies[fishIndex];
+
+			fsh.targetX = Math.random() * htmlCanvas.width;
+			fsh.targetY = Math.random() * htmlCanvas.height;
+
+			fsh.velX = (fsh.targetX - fsh.x) * 0.001;
+			fsh.velY = (fsh.targetY - fsh.y) * 0.0001;
+
+		}
+
+		setInterval(updateScene, 16);
+
+		if(emitBubbles == "true")
+		{
+			setInterval(air, parseInt(rate));
+		}
+		
+		setInterval(fishTarget, 3000);
+	</script>
+</body>
+</html>
