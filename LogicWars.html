@@ -1,0 +1,394 @@
+<html>
+	<head>
+		<style>
+			html,body
+			{
+				width: 100%;
+				height: 100%;
+				margin: 0px;
+				padding: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script>
+			var debug = !true;
+
+			function Mesh(vertBuffer, lineBuffer)
+			{
+				 this.vertBuffer = vertBuffer;
+				 this.lineBuffer = lineBuffer;
+			}
+
+			function Model(name, mesh)
+			{
+				this.name = name;
+				this.x = 0;
+				this.y = 0;
+				this.z = 0;
+
+				this.rotX = 0;
+				this.rotY = 0;
+				this.rotZ = 0;
+
+				this.visible = true;
+				this.mesh = mesh;
+
+				this.color = "#FFFFFF";
+
+				this.xLocs = new Int32Array(mesh.vertBuffer.length / 3);
+				this.yLocs = new Int32Array(mesh.vertBuffer.length / 3);
+
+				this.yLocs = new Int32Array(mesh.vertBuffer.length / 3);
+			}
+
+			var models = new Array();
+
+			var tieVertBuffer = new Float32Array([-55.555556,-55.555556,-55.555556,
+												  -55.555556,-55.555556, 55.555556,
+												  -55.555556, 55.555556,-55.555556,
+												  -55.555556, 55.555556, 55.555556,
+												   55.555556,-55.555556,-55.555556,
+												   55.555556,-55.555556, 55.555556,
+												   55.555556, 55.555556,-55.555556,
+												   55.555556, 55.555556, 55.555556,
+												  -75.000000,-75.000000, 0.0000000,
+												  -75.000000, 0.0000000,-75.000000,
+												   0.0000000,-75.000000,-75.000000,
+												  -75.000000, 0.0000000, 75.000000,
+												   0.0000000,-75.000000, 75.000000,
+												  -75.000000, 75.000000, 0.0000000,
+											 	   0.0000000, 75.000000,-75.000000,
+												   0.0000000, 75.000000, 75.000000,
+												   75.000000,-75.000000, 0.0000000,
+												   75.000000, 0.0000000,-75.000000,
+												   75.000000, 0.0000000, 75.000000,
+												   75.000000, 75.000000, 0.0000000,
+												   0.0000000, 100.00000, 0.0000000,
+												   0.0000000,-100.00000, 0.0000000,
+												   0.0000000, 0.0000000, 100.00000,
+												   0.0000000, 0.0000000,-100.00000,
+												   100.00000, 0.0000000, 0.0000000,
+												  -100.00000, 0.0000000, 0.0000000,
+
+												   249.66158, 0.0000000, 0.0000000,
+												   249.66158, 0.0000000,-203.60690,
+												   249.66158, 0.0000000, 203.60690,
+												   249.66158, 240.51486, 143.56864,
+												   249.66158, 240.51486,-143.56864,
+												   249.66158,-240.51486, 143.56864,
+												   249.66158,-240.51486,-143.56864,
+
+												  -249.66158, 0.0000000, 0.0000000,
+												  -249.66158, 0.0000000,-203.60690,
+												  -249.66158, 0.0000000, 203.60690,
+												  -249.66158, 240.51486, 143.56864,
+												  -249.66158, 240.51486,-143.56864,
+												  -249.66158,-240.51486, 143.56864,
+												  -249.66158,-240.51486,-143.56864]);
+
+			for(var v = 0; v < tieVertBuffer.length; v++)
+			{
+				tieVertBuffer[v] *= 1;
+			}
+
+			var tieLineBuffer = new Int32Array([ 8, 25,
+												25, 13,
+
+												16, 24,
+												24, 19,
+
+												 0, 9,
+												 9, 2,
+												 2,14,
+												14, 6,
+												 6,17,
+												17, 4,
+												 4,10,
+												10, 0,
+
+												 1,11,
+												11, 3,
+												 3,15,
+												15, 7,
+												 7,18,
+												18, 5,
+												 5,12,
+												12, 1,
+
+												 9,25,
+												25,11,
+												11,22,
+												22,18,
+												18,24,
+												24,17,
+
+												10,21,
+												21,12,
+												12,22,
+												22,15,
+												15,20,
+												20,14,
+
+												 0, 8,
+												 8, 1,
+
+												 2,13,
+												13, 3,
+
+												 4,16,
+												16, 5,
+
+												6,19,
+												19, 7,
+
+												 0,23,
+												 9,23,
+												 2,23,
+												14,23,
+												 6,23,
+												17,23,
+												 4,23,
+												10,23,
+
+												 8,21,
+												21,16,
+												13,20,
+												20,19,
+
+												31,32,
+												32,27,
+												27,30,
+												30,29,
+												29,28,
+												28,31,
+												29,26,
+												30,26,
+												31,26,
+												32,26,
+
+												16,26,
+												19,26,
+
+												38,39,
+												39,34,
+												34,37,
+												37,36,
+												36,35,
+												35,38,
+												36,33,
+												37,33,
+												38,33,
+												39,33,
+
+												8 ,33,
+												13,33]);
+
+			var tieMesh = new Mesh(tieVertBuffer, tieLineBuffer);
+			var tieModel = new Model("tieFighter", tieMesh);
+			tieModel.z = 10000;
+			models.push(tieModel);
+
+			var cubeVertBuffer = new Float32Array([250, 250, 1000,
+												  -250, 250, 1000,
+												   250, 250,0,
+												  -250, 250,0,
+												   250,-250, 1000,
+												  -250,-250, 1000,
+												   250,-250,0,
+												  -250,-250,0,
+												   2000,-250,0,
+												  -2000,-250,0]);
+
+			var cubeLineBuffer = new Int32Array([2,3,
+												 2,0,
+												 3,7,
+												 7,5,
+												 3,1,
+												 2,6,
+												 6,4,
+												 6,8,
+												 7,9]);
+
+
+			var cubeMesh = new Mesh(cubeVertBuffer, cubeLineBuffer);
+
+			for(var i = 0; i <= 10; i++)
+			{
+				var cubeModel = new Model("deathStar", cubeMesh);
+				cubeModel.y = 400;
+				cubeModel.z = (1000 * i);
+				models.push(cubeModel)
+			}
+
+			var time;
+
+			var cnv = document.getElementById('canvas');
+			var focalLength = cnv.height;
+
+			var ctx = cnv.getContext('2d');
+			ctx.lineWidth = 2;
+			ctx.lineCap = "round";
+
+			function update(delta)
+			{
+				for (var i = 0; i < models.length; i++)
+				{
+					var model = models[i];
+
+					if(model.name == "deathStar")
+					{
+						model.z -= (delta * 2);
+
+						if(model.z < -1000)
+						{
+							model.z += (1000 * 10)
+						}
+					}
+
+					if(model.name == "tieFighter")
+					{
+						model.z -= (delta * 3);
+						//model.rotX += (delta * 0.002);
+
+						if(model.z < 0)
+						{
+							model.z = 20000;
+							model.x = (Math.random() * 8000) - 4000;
+						}
+
+						model.y = -((Math.sin((model.z / 4000) + -1) * 2000) + 1500);
+					}
+				}
+			}
+
+			function transform()
+			{
+				// Bounds
+				var xOffset = cnv.width	/ 2;
+				var yOffset = cnv.height / 2;
+
+				// Transform Models
+				for (var i = 0; i < models.length; i++)
+				{
+					var model = models[i];
+
+					if(model.visible)
+					{
+						for(var v = 0; v < model.mesh.vertBuffer.length; v += 3)
+						{
+							var vertNum = v / 3;
+
+							var x = model.mesh.vertBuffer[v];
+							var y = model.mesh.vertBuffer[v + 1];
+							var z = model.mesh.vertBuffer[v + 2];
+
+							// Rotate X;
+							if(model.rotX != 0)
+							{
+								var sinRot = Math.sin(model.rotX);
+								var cosRot = Math.cos(model.rotX);
+
+								var pY = y;
+								y = y * cosRot - z * sinRot;
+								z = pY * sinRot + z * cosRot;
+							}
+
+							// Rotate Y;
+							if(model.rotY != 0)
+							{
+								var sinRot = Math.sin(model.rotY);
+								var cosRot = Math.cos(model.rotY);
+
+								var pX = x;
+								x = x * cosRot + z * sinRot;
+								z = z * cosRot - pX * sinRot;
+							}
+
+							// Calculate depth
+							var depth = focalLength / (focalLength + (z + model.z))
+
+							if(depth < 5 && depth > 0)
+							{
+								model.xLocs[vertNum] = ((x + model.x) * depth) + xOffset;
+								model.yLocs[vertNum] = ((y + model.y) * depth) + yOffset;
+							}
+						}
+					}
+				}
+			}
+
+			function render()
+			{
+				for (var i = 0; i < models.length; i++)
+				{
+					var model = models[i];
+
+					if(model.visible)
+					{
+						ctx.strokeStyle = model.color;
+						ctx.fillStyle = model.color;
+
+						if(model.mesh.lineBuffer)
+						{
+							for(var l = 0; l < model.mesh.lineBuffer.length; l += 2)
+							{
+								var st = model.mesh.lineBuffer[l];
+								var ed = model.mesh.lineBuffer[l + 1];
+
+								ctx.beginPath();
+								ctx.moveTo(model.xLocs[st],model.yLocs[st]);
+								ctx.lineTo(model.xLocs[ed],model.yLocs[ed]);
+								ctx.stroke();
+							}
+						}
+						else
+						{
+							for(var s = 0; s < model.mesh.vertBuffer.length / 3; s++)
+							{
+								ctx.beginPath();
+								ctx.arc(model.xLocs[s], model.yLocs[s], 5, 0, 2 * Math.PI, false);
+								ctx.fill();
+							}
+						}
+
+						if(debug)
+						{
+							for(var s = 0; s < model.mesh.vertBuffer.length / 3; s++)
+							{
+								ctx.fillText(s, model.xLocs[s], model.yLocs[s])
+							}
+						}
+					}
+				}
+			}
+
+			function frame()
+			{
+				cnv.width  = window.innerWidth;
+				cnv.height = window.innerHeight;
+				focalLength = cnv.height;
+
+				// Time
+				var now = new Date().getTime();
+				var delta = now - (time || now);
+				
+				time = now;
+
+				// Clearing
+				ctx.rect(0, 0, cnv.width, cnv.height);
+				ctx.fillStyle = "#222B42";
+				ctx.fill();
+
+				update(delta);
+				transform();
+				render();
+
+				requestAnimationFrame(frame);
+			}
+
+			requestAnimationFrame(frame);
+		</script>
+	</body>
+</html> 
