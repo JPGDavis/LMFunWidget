@@ -231,6 +231,9 @@
 			ctx.lineWidth = 2;
 			ctx.lineCap = "round";
 
+			var cameraX = 0;
+			var cameraY = 0;
+
 			function update(delta)
 			{
 				for (var i = 0; i < models.length; i++)
@@ -284,6 +287,10 @@
 							var y = model.mesh.vertBuffer[v + 1];
 							var z = model.mesh.vertBuffer[v + 2];
 
+							// Shake the camera
+							x += (Math.sin(time / 2345) * 200);
+							y += (Math.sin(time / 4532) * 100);
+
 							// Rotate X;
 							if(model.rotX != 0)
 							{
@@ -311,8 +318,8 @@
 
 							if(depth < 5 && depth > 0)
 							{
-								model.xLocs[vertNum] = ((x + model.x) * depth) + xOffset;
-								model.yLocs[vertNum] = ((y + model.y) * depth) + yOffset;
+								model.xLocs[vertNum] = ((x + model.x) * depth) + cameraX + xOffset;
+								model.yLocs[vertNum] = ((y + model.y) * depth) + cameraY + yOffset;
 							}
 						}
 					}
@@ -388,6 +395,13 @@
 				requestAnimationFrame(frame);
 			}
 
+			function mouseMoved(event)
+			{
+				cameraX = -(event.clientX - (window.innerWidth / 2)) * 0.5;
+				cameraY = -(event.clientY - (window.innerHeight / 2)) * 0.5;
+			}
+
+			document.onmousemove = mouseMoved;
 			requestAnimationFrame(frame);
 		</script>
 	</body>
